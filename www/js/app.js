@@ -16,7 +16,7 @@
         var recInterval = setInterval(function() {
             recTime = recTime + 1;
             setAudioPosition(recTime + " sec");
-            if (recTime >= 10) {
+            if (recTime >= 5) {
                 clearInterval(recInterval);
                 mediaRec.stopRecord();
             }
