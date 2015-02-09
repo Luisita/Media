@@ -1,50 +1,41 @@
-// Wait for device API libraries to load
+// Called when capture operation is finished
     //
-    document.addEventListener("deviceready", onDeviceReady, false);
-
-    // Record audio
-    //
-    function recordAudio() {
-        var src = "myrecording.amr";
-        var mediaRec = new Media(src, onSuccess, onError);
-
-        // Record audio
-        mediaRec.startRecord();
-
-        // Stop recording after 10 sec
-        var recTime = 0;
-        var recInterval = setInterval(function() {
-            recTime = recTime + 1;
-            setAudioPosition(recTime + " sec");
-            if (recTime >= 5) {
-                clearInterval(recInterval);
-                mediaRec.stopRecord();
-            }
-        }, 1000);
+    function captureSuccess(mediaFiles) {
+        var i, len;
+        for (i = 0, len = mediaFiles.length; i < len; i += 1) {
+            uploadFile(mediaFiles[i]);
+        }
     }
 
-    // device APIs are available
+    // Called if something bad happens.
     //
-    function onDeviceReady() {
-        recordAudio();
+    function captureError(error) {
+        var msg = 'An error occurred during capture: ' + error.code;
+        navigator.notification.alert(msg, null, 'Uh oh!');
     }
 
-    // onSuccess Callback
+    // A button will call this function
     //
-    function onSuccess() {
-        console.log("recordAudio():Audio Success");
+    function captureAudio() {
+        // Launch device audio recording application,
+        // allowing user to capture up to 2 audio clips
+        navigator.device.capture.captureAudio(captureSuccess, captureError, {limit: 2});
     }
 
-    // onError Callback
-    //
-    function onError(error) {
-        alert('code: '    + error.code    + '\n' +
-              'message: ' + error.message + '\n');
-    }
+    // Upload files to server
+    function uploadFile(mediaFile) {
+        var ft = new FileTransfer(),
+            path = mediaFile.fullPath,
+            name = mediaFile.name;
 
-    // Set audio position
-    //
-    function setAudioPosition(position) {
-        document.getElementById('audio_position').innerHTML = position;
+        ft.upload(path,
+            "http://my.domain.com/upload.php",
+            function(result) {
+                console.log('Upload success: ' + result.responseCode);
+                console.log(result.bytesSent + ' bytes sent');
+            },
+            function(error) {
+                console.log('Error uploading file ' + path + ': ' + error.code);
+            },
+            { fileName: name });
     }
-
